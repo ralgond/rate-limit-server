@@ -1,0 +1,20 @@
+<config>
+    <timeout>
+        <connect value="2000ms"/>
+        <frontend value="5s"/>
+        <backend value="3000ms" />
+	</timeout>
+
+    <maxsize>
+        <client_request_header value="16kb" />
+        <client_request_body value="10mb" />
+        <server_to_client_buffer value="10mb" desc="when client is slower than server, buffer will increase"/>
+    </maxsize>
+
+	<backend>
+		<max_connections_per_host value="50" />
+    </backend>
+
+    <frontend bind="0.0.0.0:8002">
+    </frontend>
+</config>

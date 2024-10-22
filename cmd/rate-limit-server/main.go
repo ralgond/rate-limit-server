@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/ralgond/rate-limit-server/internal/config"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -12,9 +14,25 @@ var transport = &http.Transport{
 	MaxIdleConnsPerHost: 10,
 	IdleConnTimeout:     30 * time.Second,
 	MaxConnsPerHost:     50,
+	WriteBufferSize:     1 * 1024 * 1024,
+}
+
+type MuI struct {
+	mutex sync.Mutex
+	i     int
+}
+
+var kMuI = &MuI{}
+
+func incr(mui *MuI) {
+	mui.mutex.Lock()
+	mui.i += 1
+	mui.mutex.Unlock()
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	incr(kMuI)
+
 	// 复制请求头
 	var xUpstreamServer = ""
 	for key, value := range r.Header {
@@ -70,17 +88,23 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	conf, err := config.LoadConfig("./configs/rate-limit-server.xml")
+	if err != nil {
+		fmt.Println("load configuration failed, err: ", err)
+		return
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 
-	port := "0.0.0.0:8002"
+	addrAndPort := conf.Frontend.Address
 	server := http.Server{
-		Addr:           port,
+		Addr:           addrAndPort,
 		Handler:        mux,
 		MaxHeaderBytes: 16 * 1024,
 	}
 
-	fmt.Println("Starting proxy server on port", port)
+	fmt.Println("Starting proxy server on port", addrAndPort)
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Println("Error starting server:", err)
 	}
