@@ -4,13 +4,13 @@ import "fmt"
 
 type Node struct {
 	key   string
-	value any
+	Value any
 	next  *Node
 	prev  *Node
 }
 
 func CreateNode(key string, value any) *Node {
-	return &Node{key: key, value: value, next: nil, prev: nil}
+	return &Node{key: key, Value: value, next: nil, prev: nil}
 }
 
 type HashMap map[string]*Node
@@ -49,7 +49,7 @@ func (c *Cache) GetAndRemove(key string) *Node {
 }
 
 func (c *Cache) Remove(node *Node) *Node {
-	// fmt.Printf("Remove %s\n", node.value)
+	// fmt.Printf("Remove %s\n", node.Value)
 	prev := node.prev
 	next := node.next
 
@@ -62,7 +62,7 @@ func (c *Cache) Remove(node *Node) *Node {
 }
 
 func (c *Cache) Add(node *Node) {
-	// fmt.Printf("Add %s\n", node.value)
+	// fmt.Printf("Add %s\n", node.Value)
 	headRight := c.queue.head.next
 
 	node.prev = c.queue.head
@@ -84,7 +84,7 @@ func (c *Cache) Display() {
 	node := c.queue.head.next
 
 	for i := 0; i < c.queue.length; i++ {
-		fmt.Printf("{%s}", node.value)
+		fmt.Printf("{%s}", node.Value)
 		if i < c.queue.length-1 {
 			fmt.Printf("<-->")
 		}

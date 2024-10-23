@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/bsm/ratelimit/v3"
 	"github.com/ralgond/rate-limit-server/internal/config"
+	"github.com/ralgond/rate-limit-server/internal/lru"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -14,32 +17,54 @@ var transport = &http.Transport{
 	MaxIdleConnsPerHost: 10,
 	IdleConnTimeout:     30 * time.Second,
 	MaxConnsPerHost:     50,
-	WriteBufferSize:     1 * 1024 * 1024,
 }
 
-type MuI struct {
+type MutexCache struct {
 	mutex sync.Mutex
-	i     int
+	cache lru.Cache
 }
 
-var kMuI = &MuI{}
+func (mc *MutexCache) shouldBeLimited(key string) bool {
+	mc.mutex.Lock()
 
-func incr(mui *MuI) {
-	mui.mutex.Lock()
-	mui.i += 1
-	mui.mutex.Unlock()
+	node := mc.cache.GetAndRemove(key)
+	if node == nil {
+		node = lru.CreateNode(key, ratelimit.New(1000, time.Second))
+	}
+	mc.cache.Add(node)
+
+	var shouldLimit = false
+	if rl, ok := node.Value.(*ratelimit.RateLimiter); ok {
+		shouldLimit = rl.Limit()
+	} else {
+		os.Exit(-1)
+	}
+
+	mc.mutex.Unlock()
+	return shouldLimit
 }
+
+func NewMutexCache(capacity int) *MutexCache {
+	return &MutexCache{cache: lru.NewCache(capacity)}
+}
+
+var mutexCache = NewMutexCache(1 * 1000 * 1000)
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	incr(kMuI)
-
 	// 复制请求头
 	var xUpstreamServer = ""
+	var xRealIp = ""
 	for key, value := range r.Header {
 		if key == "X-Upstream-Server" {
 			xUpstreamServer = value[0]
-			break
+		} else if key == "X-Real-Ip" {
+			xRealIp = value[0]
 		}
+	}
+
+	if mutexCache.shouldBeLimited(xRealIp) {
+		http.Error(w, "Requests are being made too frequently.", http.StatusTooManyRequests)
+		return
 	}
 
 	// 创建目标请求
