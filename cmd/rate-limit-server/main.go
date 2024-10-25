@@ -29,7 +29,7 @@ func (mc *MutexCache) shouldBeLimited(key string) bool {
 
 	node := mc.cache.GetAndRemove(key)
 	if node == nil {
-		node = lru.CreateNode(key, ratelimit.New(1000, time.Second))
+		node = lru.CreateNode(key, ratelimit.New(1000*1000, time.Second))
 	}
 	mc.cache.Add(node)
 
