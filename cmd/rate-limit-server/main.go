@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/bsm/ratelimit/v3"
 	"github.com/ralgond/rate-limit-server/internal/config"
 	"github.com/ralgond/rate-limit-server/internal/lru"
+	"github.com/redis/go-redis/v9"
 	"io"
 	"net/http"
 	"os"
@@ -18,6 +20,14 @@ var transport = &http.Transport{
 	IdleConnTimeout:     30 * time.Second,
 	MaxConnsPerHost:     50,
 }
+
+var rdb = redis.NewClient(&redis.Options{
+	Addr:     "localhost:6379",
+	Password: "",
+	DB:       0,
+	PoolSize: 100,
+})
+var ctx = context.Background()
 
 type MutexCache struct {
 	mutex sync.Mutex
@@ -51,6 +61,29 @@ func NewMutexCache(capacity int) *MutexCache {
 var mutexCache = NewMutexCache(1 * 1000 * 1000)
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	sessionId, err := r.Cookie("sessionId")
+	if err != nil {
+		http.Error(w, "Cookie not found", http.StatusBadRequest)
+		return
+	}
+
+	//done := make(chan struct{})
+	//go func() {
+	//	_, err = rdb.Get(ctx, sessionId.Value).Result()
+	//	close(done)
+	//}()
+	//
+	//<-done
+
+	_, err = rdb.Get(ctx, sessionId.Value).Result()
+
+	// fmt.Printf("err: ====>%v", err)
+
+	if err != nil {
+		http.Error(w, "StatusForbidden", http.StatusForbidden)
+		return
+	}
+
 	// 复制请求头
 	var xUpstreamServer = ""
 	var xRealIp = ""
