@@ -75,12 +75,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	//
 	//<-done
 
-	_, err = rdb.Get(ctx, sessionId.Value).Result()
+	value, err := rdb.Get(ctx, sessionId.Value).Result()
 
 	// fmt.Printf("err: ====>%v", err)
+	if err == nil && value == "" {
+		http.Error(w, "StatusForbidden", http.StatusForbidden)
+		return
+	}
 
 	if err != nil {
-		http.Error(w, "StatusForbidden", http.StatusForbidden)
+		http.Error(w, "StatusInternalServerError", http.StatusInternalServerError)
 		return
 	}
 
