@@ -12,14 +12,33 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <netty.version>4.1.114.Final</netty.version>
     </properties>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
         <dependency>
             <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>4.1.114.Final</version>
+            <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version> <!-- 根据需要选择具体版本 -->
+        </dependency>
+        <!-- Netty HTTP服务端和客户端支持 -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <version>${netty.version}</version> <!-- 根据需要选择具体版本 -->
+        </dependency>
+        <!-- Netty 内存管理 -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>${netty.version}</version> <!-- 根据需要选择具体版本 -->
+        </dependency>
+        <!-- Netty 日志支持（可选） -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <version>${netty.version}</version> <!-- 根据需要选择具体版本 -->
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
