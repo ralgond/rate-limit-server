@@ -10,7 +10,7 @@
 ```bash
 CREATE TABLE `rules` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `key_type` enum('IP','SI') DEFAULT NULL,
+  `key_type` enum('IP','SI') NOT NULL,
   `method` char(10) NOT NULL,
   `path_pattern` varchar(1024) NOT NULL,
   `deleted` tinyint(1) NOT NULL,
