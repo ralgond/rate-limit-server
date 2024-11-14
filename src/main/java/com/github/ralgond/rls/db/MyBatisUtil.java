@@ -34,7 +34,7 @@ public class MyBatisUtil {
 
         executor.scheduleAtFixedRate(()->{
             updateAllRules();
-            System.out.println(getAllRules());
+            // System.out.println(getAllRules());
         }, 0, 5, TimeUnit.SECONDS);
     }
 

@@ -30,3 +30,6 @@ examples:
 |  1 | IP       | GET    | /.*          |       0 | 2024-11-13  | 2024-11-14  |    15 |          30 |              60 |
 |  2 | SI       | POST   | /article/new |       0 | 2024-11-13  | 2024-11-13  |     3 |           3 |              60 |
 |  3 | SI       | GET    | /article/\d+ |       0 | 2024-11-14  | 2024-11-14  |     5 |           5 |              60 |
+
+## Flowchart
+![](images/Rate-Limit-Server-Flowchart.drawio.png)
