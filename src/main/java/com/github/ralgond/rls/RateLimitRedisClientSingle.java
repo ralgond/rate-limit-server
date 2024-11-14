@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.*;
 
+import java.util.ArrayList;
+
 public class RateLimitRedisClientSingle implements RateLimitRedisClient {
 
     private static Logger logger  = LoggerFactory.getLogger(RateLimitRedisClientSingle.class);
@@ -27,14 +29,18 @@ public class RateLimitRedisClientSingle implements RateLimitRedisClient {
                     String.valueOf(rule.getBurst()),
                     String.valueOf(rule.getTokenCount()),
                     String.valueOf(rule.getTokenTimeUnit()));
-            logger.debug(ret.getClass().getCanonicalName());
+            ArrayList<Object> ol = (ArrayList<Object>)ret;
+            String limit = ol.get(0).toString();
+            if (limit.equals("0")) {
+                return false;
+            } else {
+                return true;
+            }
         } finally {
             if (jedis != null) {
                 jedisPool.returnResource(jedis);
             }
         }
-
-        return false;
     }
 
     @Override
