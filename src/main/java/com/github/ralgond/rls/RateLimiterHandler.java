@@ -1,5 +1,6 @@
 package com.github.ralgond.rls;
 
+import com.github.ralgond.rls.db.MyBatisUtil;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
@@ -17,6 +18,8 @@ import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.ralgond.rls.db.Rule;
 
 @ChannelHandler.Sharable
 public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -36,10 +39,12 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
     private void handleRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
         String xRealIP = null;
+        String xRealMethod = null;
         for (Map.Entry<String,String> entry : request.headers()) {
             if (entry.getKey().equals("X-Real-IP")) {
                 xRealIP = entry.getValue();
-                break;
+            } else if (entry.getKey().equals("X-Real-Method")) {
+                xRealMethod = entry.getValue();
             }
         }
 
@@ -48,6 +53,12 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
         if (xRealIP == null) {
             sendResponse(ctx, request,
                     HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: X-Real-IP not found.");
+            return;
+        }
+
+        if (xRealMethod == null) {
+            sendResponse(ctx, request,
+                    HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: X-Real-Method not found.");
             return;
         }
 
@@ -72,14 +83,47 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
             }
         }
 
+        boolean matched = false;
+        Rule matchedRule = null;
+
+        var rules = MyBatisUtil.getAllRules();
+
         String limitKey = null;
         if (limitByIp) {
-            limitKey = "ip_" + xRealIP;
+            for (var rule : rules) {
+                if (rule.getKeyType().equals("IP") &&
+                        rule.getCompiledPathPattern().matcher(request.uri()).matches() &&
+                        rule.getMethod().equals(xRealMethod)) {
+                    matched = true;
+                    matchedRule = rule;
+                    break;
+                }
+            }
+            if (!matched) {
+                sendResponse(ctx, request,
+                        HttpResponseStatus.FORBIDDEN, "FORBIDDEN");
+                return;
+            }
+            limitKey = "ip_" + xRealIP + "_"+ matchedRule.getId();
         } else {
-            limitKey = "si_" + sessionId;
+            for (var rule : rules) {
+                if (rule.getKeyType().equals("SI") &&
+                        rule.getCompiledPathPattern().matcher(request.uri()).matches() &&
+                        rule.getMethod().equals(xRealMethod)) {
+                    matched = true;
+                    matchedRule = rule;
+                    break;
+                }
+            }
+            if (!matched) {
+                sendResponse(ctx, request,
+                        HttpResponseStatus.FORBIDDEN, "FORBIDDEN");
+                return;
+            }
+            limitKey = "si_" + sessionId + "_" + matchedRule.getId();
         }
 
-        if (rlRedisClient.shouldLimit(limitKey)) {
+        if (rlRedisClient.shouldLimit(limitKey, matchedRule)) {
             sendResponse(ctx, request,
                     HttpResponseStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS: " + limitKey);
             return;

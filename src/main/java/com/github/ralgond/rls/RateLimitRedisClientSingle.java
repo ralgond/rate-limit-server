@@ -1,8 +1,13 @@
 package com.github.ralgond.rls;
 
+import com.github.ralgond.rls.db.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.*;
 
 public class RateLimitRedisClientSingle implements RateLimitRedisClient {
+
+    private static Logger logger  = LoggerFactory.getLogger(RateLimitRedisClientSingle.class);
 
     private final JedisPool jedisPool;
 
@@ -13,12 +18,16 @@ public class RateLimitRedisClientSingle implements RateLimitRedisClient {
     }
 
     @Override
-    public boolean shouldLimit(String key) {
+    public boolean shouldLimit(String key, Rule rule) {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
-            Object ret = jedis.sendCommand(CustomRedisCommand.CLTHROTTLE, key, "15", "15", "60");
-            // System.out.println(ret);
+            Object ret = jedis.sendCommand(CustomRedisCommand.CLTHROTTLE,
+                    key,
+                    String.valueOf(rule.getBurst()),
+                    String.valueOf(rule.getTokenCount()),
+                    String.valueOf(rule.getTokenTimeUnit()));
+            logger.debug(ret.getClass().getCanonicalName());
         } finally {
             if (jedis != null) {
                 jedisPool.returnResource(jedis);
@@ -31,10 +40,5 @@ public class RateLimitRedisClientSingle implements RateLimitRedisClient {
     @Override
     public void close() {
         jedisPool.close();
-    }
-
-    public static void main(String args[]) {
-        var client = new RateLimitRedisClientSingle();
-        client.shouldLimit("si_a");
     }
 }
