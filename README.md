@@ -1,5 +1,8 @@
 # rate-limit-server
 
+## Java Version
+Java 21
+
 ## Architecture Image
 ![](images/Rate-Limit-System-Design-5.drawio.png)
 
