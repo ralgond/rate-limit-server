@@ -9,17 +9,17 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class NettyServer {
     private int port;
+
+    @Autowired
     private RateLimiterHandler rateLimiterHandler;
 
-    public NettyServer(int port) {
-        this.port = port;
-        this.rateLimiterHandler = new RateLimiterHandler();
-    }
-
-    public void start() throws Exception {
+    public void start(int port) throws Exception {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup(3*Runtime.getRuntime().availableProcessors());
 

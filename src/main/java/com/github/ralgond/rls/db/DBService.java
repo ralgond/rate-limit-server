@@ -1,35 +1,32 @@
 package com.github.ralgond.rls.db;
 
-import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.InputStream;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class MyBatisUtil {
-    private static SqlSessionFactory sqlSessionFactory;
-    private static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    private static List<Rule> allRules;
-    private static ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
+public class DBService {
+    @Autowired
+    private SqlSessionFactory sqlSessionFactory;
 
-    static {
-        try {
-            InputStream inputStream = Resources.getResourceAsStream("mybatis-config.xml");
-            sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private final ScheduledExecutorService executor;
+    private List<Rule> allRules;
+    private final ReadWriteLock rwLock;
 
+    public DBService() {
+        executor = Executors.newSingleThreadScheduledExecutor();
+        rwLock = new ReentrantReadWriteLock();
+    }
+
+    public void start() {
         updateAllRules();
 
         executor.scheduleAtFixedRate(()->{
@@ -38,15 +35,11 @@ public class MyBatisUtil {
         }, 0, 5, TimeUnit.SECONDS);
     }
 
-    public static SqlSessionFactory getSqlSessionFactory() {
-        return sqlSessionFactory;
-    }
-
-    public static SqlSession openSession() {
+    public SqlSession openSession() {
         return sqlSessionFactory.openSession();
     }
 
-    public static List<Rule> getAllRules() {
+    public List<Rule> getAllRules() {
         try {
             rwLock.readLock().lock();
             return allRules;
@@ -55,8 +48,8 @@ public class MyBatisUtil {
         }
     }
 
-    public static void updateAllRules() {
-        try (SqlSession session = MyBatisUtil.openSession()) {
+    public void updateAllRules() {
+        try (SqlSession session = openSession()) {
             RuleMapper mapper = session.getMapper(RuleMapper.class);
             var tmpAllRules = mapper.getAllRules();
 
@@ -69,16 +62,6 @@ public class MyBatisUtil {
                 allRules = tmpAllRules;
             } finally {
                 rwLock.writeLock().unlock();
-            }
-        }
-    }
-
-    public static void main(String[] args) {
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (Exception e) {
-
             }
         }
     }

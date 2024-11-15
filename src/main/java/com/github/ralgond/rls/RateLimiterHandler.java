@@ -1,6 +1,6 @@
 package com.github.ralgond.rls;
 
-import com.github.ralgond.rls.db.MyBatisUtil;
+import com.github.ralgond.rls.db.DBService;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
@@ -20,17 +20,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.ralgond.rls.db.Rule;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @ChannelHandler.Sharable
 public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterHandler.class);
 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(
-            3*Runtime.getRuntime().availableProcessors());
-    // private static final ExecutorService executor = Executors.newCachedThreadPool();
-    private final RateLimitRedisClient rlRedisClient = new RateLimitRedisClientSingle();
-    private final UserSessionRedisClient usRedisClient = new UserSessionRedisClientSingle();
+    private final ExecutorService executor;
+
+    @Autowired
+    private RateLimitRedisClient rlRedisClient;
+
+    @Autowired
+    private UserSessionRedisClient usRedisClient;
+
+    @Autowired
+    private DBService dbService;
+
+    public RateLimiterHandler() {
+        executor = Executors.newFixedThreadPool(
+                3*Runtime.getRuntime().availableProcessors());
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, FullHttpRequest fullHttpRequest) throws Exception {
@@ -86,7 +97,7 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
         boolean matched = false;
         Rule matchedRule = null;
 
-        var rules = MyBatisUtil.getAllRules();
+        var rules = dbService.getAllRules();
 
         String limitKey = null;
         if (limitByIp) {
@@ -127,16 +138,13 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
             if (rlRedisClient.shouldLimit(limitKey, matchedRule)) {
                 sendResponse(ctx, request,
                         HttpResponseStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS: " + limitKey);
-                return;
             } else {
                 sendResponse(ctx, request,
                         HttpResponseStatus.OK, "OK: " + limitKey);
-                return;
             }
         } catch (Exception e) {
             sendResponse(ctx, request,
                     HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + limitKey);
-            return;
         }
     }
 
