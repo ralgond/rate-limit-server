@@ -123,13 +123,19 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
             limitKey = "si_" + sessionId + "_" + matchedRule.getId();
         }
 
-        if (rlRedisClient.shouldLimit(limitKey, matchedRule)) {
+        try {
+            if (rlRedisClient.shouldLimit(limitKey, matchedRule)) {
+                sendResponse(ctx, request,
+                        HttpResponseStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS: " + limitKey);
+                return;
+            } else {
+                sendResponse(ctx, request,
+                        HttpResponseStatus.OK, "OK: " + limitKey);
+                return;
+            }
+        } catch (Exception e) {
             sendResponse(ctx, request,
-                    HttpResponseStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS: " + limitKey);
-            return;
-        } else {
-            sendResponse(ctx, request,
-                    HttpResponseStatus.OK, "OK: " + limitKey);
+                    HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + limitKey);
             return;
         }
     }

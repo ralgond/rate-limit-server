@@ -20,7 +20,7 @@ public class RateLimitRedisClientSingle implements RateLimitRedisClient {
     }
 
     @Override
-    public boolean shouldLimit(String key, Rule rule) {
+    public boolean shouldLimit(String key, Rule rule) throws Exception {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
@@ -29,7 +29,7 @@ public class RateLimitRedisClientSingle implements RateLimitRedisClient {
                     String.valueOf(rule.getBurst()),
                     String.valueOf(rule.getTokenCount()),
                     String.valueOf(rule.getTokenTimeUnit()));
-            ArrayList<Object> ol = (ArrayList<Object>)ret;
+            ArrayList<Object> ol = (ArrayList<Object>) ret;
             String limit = ol.get(0).toString();
             if (limit.equals("0")) {
                 return false;

@@ -3,6 +3,6 @@ package com.github.ralgond.rls;
 import com.github.ralgond.rls.db.Rule;
 
 public interface RateLimitRedisClient {
-    boolean shouldLimit(String key, Rule rule);
+    boolean shouldLimit(String key, Rule rule) throws Exception;
     void close();
 }
