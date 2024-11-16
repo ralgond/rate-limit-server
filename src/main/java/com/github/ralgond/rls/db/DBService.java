@@ -35,6 +35,10 @@ public class DBService {
         }, 0, 5, TimeUnit.SECONDS);
     }
 
+    public void stop() {
+        executor.close();
+    }
+
     public SqlSession openSession() {
         return sqlSessionFactory.openSession();
     }

@@ -43,6 +43,10 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 3*Runtime.getRuntime().availableProcessors());
     }
 
+    public void close() {
+        executor.close();
+    }
+
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, FullHttpRequest fullHttpRequest) throws Exception {
         executor.submit(() -> handleRequest(channelHandlerContext, fullHttpRequest));
@@ -164,10 +168,5 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
             response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
-    }
-
-    public void close() {
-        rlRedisClient.close();
-        usRedisClient.close();
     }
 }

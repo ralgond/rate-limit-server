@@ -41,7 +41,6 @@ public class NettyServer {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
-            this.rateLimiterHandler.close();
         }
     }
 }

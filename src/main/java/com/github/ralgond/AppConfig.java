@@ -18,7 +18,7 @@ public class AppConfig {
         return new NettyServer();
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public RateLimiterHandler rateLimiterHandler() {
         return new RateLimiterHandler();
     }
@@ -34,17 +34,17 @@ public class AppConfig {
         }
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public RateLimitRedisClient rateLimitRedisClient() {
         return new RateLimitRedisClientSingle();
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public UserSessionRedisClient userSessionRedisClient() {
         return new UserSessionRedisClientSingle();
     }
 
-    @Bean
+    @Bean(destroyMethod = "stop")
     public DBService dbService() {
         return new DBService();
     }

@@ -14,5 +14,7 @@ public class Main {
 
         NettyServer server = context.getBean(NettyServer.class);
         server.start(8002);
+
+        context.close();
     }
 }
