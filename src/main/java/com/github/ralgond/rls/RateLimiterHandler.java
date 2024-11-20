@@ -13,8 +13,8 @@ import io.netty.channel.ChannelHandler;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +39,13 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
     private DBService dbService;
 
     public RateLimiterHandler() {
-        executor = Executors.newFixedThreadPool(
-                3*Runtime.getRuntime().availableProcessors());
+//        executor = Executors.newFixedThreadPool(
+//                3*Runtime.getRuntime().availableProcessors());
+        var queue = new ArrayBlockingQueue<Runnable>(10000);
+        executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
+                4*Runtime.getRuntime().availableProcessors(),
+                60, TimeUnit.SECONDS,
+                queue, new ThreadPoolExecutor.AbortPolicy());
     }
 
     public void close() {
@@ -48,11 +53,24 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, FullHttpRequest fullHttpRequest) throws Exception {
-        executor.submit(() -> handleRequest(channelHandlerContext, fullHttpRequest));
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+        try {
+            executor.submit(() ->
+            {
+                try {
+                    handleRequest(ctx, request);
+                } catch (Exception e) {
+                    sendResponse(ctx, request,
+                            HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            sendResponse(ctx, request,
+                    HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + e.getMessage());
+        }
     }
 
-    private void handleRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
+    private void handleRequest(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         String xRealIP = null;
         String xRealMethod = null;
         for (Map.Entry<String,String> entry : request.headers()) {
