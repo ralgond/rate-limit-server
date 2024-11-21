@@ -55,15 +55,15 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         try {
-            executor.submit(() ->
-            {
+//            executor.submit(() ->
+//            {
                 try {
                     handleRequest(ctx, request);
                 } catch (Exception e) {
                     sendResponse(ctx, request,
                             HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + e.getMessage());
                 }
-            });
+//            });
         } catch (Exception e) {
             sendResponse(ctx, request,
                     HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + e.getMessage());
