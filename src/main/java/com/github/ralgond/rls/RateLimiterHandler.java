@@ -27,7 +27,7 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterHandler.class);
 
-    private final ExecutorService executor;
+    // private final ExecutorService executor;
 
     @Autowired
     private RateLimitRedisClient rlRedisClient;
@@ -41,15 +41,15 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
     public RateLimiterHandler() {
 //        executor = Executors.newFixedThreadPool(
 //                3*Runtime.getRuntime().availableProcessors());
-        var queue = new ArrayBlockingQueue<Runnable>(10000);
-        executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
-                4*Runtime.getRuntime().availableProcessors(),
-                60, TimeUnit.SECONDS,
-                queue, new ThreadPoolExecutor.AbortPolicy());
+//        var queue = new ArrayBlockingQueue<Runnable>(10000);
+//        executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
+//                4*Runtime.getRuntime().availableProcessors(),
+//                60, TimeUnit.SECONDS,
+//                queue, new ThreadPoolExecutor.AbortPolicy());
     }
 
     public void close() {
-        executor.close();
+        // executor.close();
     }
 
     @Override

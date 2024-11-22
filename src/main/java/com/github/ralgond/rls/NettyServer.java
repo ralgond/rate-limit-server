@@ -21,7 +21,7 @@ public class NettyServer {
 
     public void start(int port) throws Exception {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(3*Runtime.getRuntime().availableProcessors());
+        EventLoopGroup workerGroup = new NioEventLoopGroup(4*Runtime.getRuntime().availableProcessors());
 
         try {
             ServerBootstrap b = new ServerBootstrap();
