@@ -18,7 +18,7 @@ CREATE TABLE rules (
 
 
 INSERT INTO rules (`key_type`, `method`, path_pattern, deleted, create_time, update_time, burst, token_count, token_time_unit) VALUES 
-("IP", "GET", "/*", false, NOW(), NOW(), 15, 30, 60);
+("IP", "GET", "/.*", false, NOW(), NOW(), 15, 30, 60);
 
 INSERT INTO rules (`key_type`, `method`, path_pattern, deleted, create_time, update_time, burst, token_count, token_time_unit) VALUES 
 ("SI", "POST", "/article/new", false, NOW(), NOW(), 3, 3, 60);
