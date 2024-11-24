@@ -39,7 +39,7 @@ public class NettyServer {
                             socketChannel.pipeline().addLast(new ConnectionLimitingHandler());
                             socketChannel.pipeline().addLast(new IdleStateHandler(5,5,10));
                             socketChannel.pipeline().addLast(new HttpServerCodec());
-                            socketChannel.pipeline().addLast(new HttpObjectAggregator(1));
+                            socketChannel.pipeline().addLast(new HttpObjectAggregator(32));
                             socketChannel.pipeline().addLast(NettyServer.this.rateLimiterHandler);
                         }
                     });
