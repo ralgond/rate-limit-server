@@ -4,13 +4,16 @@ import com.github.ralgond.rls.*;
 import com.github.ralgond.rls.db.DBService;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import java.io.InputStream;
 
 @Configuration
+@PropertySource("classpath:external-config.properties")
 public class AppConfig {
 
     @Bean
@@ -34,14 +37,36 @@ public class AppConfig {
         }
     }
 
+    @Value("${RateLimitRedisClientSingle.host}")
+    String RateLimitRedisClientSingleHost;
+
+    @Value("${RateLimitRedisClientSingle.port}")
+    int RateLimitRedisClientSinglePort;
+
+    @Value("${RateLimitRedisClientSingle.maxPool}")
+    int RateLimitRedisClientSingleMaxPool;
+
     @Bean(destroyMethod = "close")
     public RateLimitRedisClient rateLimitRedisClient() {
-        return new RateLimitRedisClientSingle();
+        return new RateLimitRedisClientSingle(RateLimitRedisClientSingleHost,
+                RateLimitRedisClientSinglePort,
+                RateLimitRedisClientSingleMaxPool);
     }
+
+    @Value("${UserSessionRedisClientSingle.host}")
+    String UserSessionRedisClientSingleHost;
+
+    @Value("${UserSessionRedisClientSingle.port}")
+    int UserSessionRedisClientSinglePort;
+
+    @Value("${UserSessionRedisClientSingle.maxPool}")
+    int UserSessionRedisClientSingleMaxPool;
 
     @Bean(destroyMethod = "close")
     public UserSessionRedisClient userSessionRedisClient() {
-        return new UserSessionRedisClientSingle();
+        return new UserSessionRedisClientSingle(UserSessionRedisClientSingleHost,
+                UserSessionRedisClientSinglePort,
+                UserSessionRedisClientSingleMaxPool);
     }
 
     @Bean(destroyMethod = "stop")

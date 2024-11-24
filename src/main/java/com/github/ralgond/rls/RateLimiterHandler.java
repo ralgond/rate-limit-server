@@ -46,6 +46,7 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
 //                4*Runtime.getRuntime().availableProcessors(),
 //                60, TimeUnit.SECONDS,
 //                queue, new ThreadPoolExecutor.AbortPolicy());
+
     }
 
     public void close() {
@@ -59,6 +60,7 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
 //            {
                 try {
                     handleRequest(ctx, request);
+                    // handleRequestAlwaysOK(ctx, request);
                 } catch (Exception e) {
                     sendResponse(ctx, request,
                             HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + e.getMessage());
@@ -68,6 +70,10 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
             sendResponse(ctx, request,
                     HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR: " + e.getMessage());
         }
+    }
+
+    private void handleRequestAlwaysOK(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+        sendResponse(ctx, request, HttpResponseStatus.OK, "OK");
     }
 
     private void handleRequest(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {

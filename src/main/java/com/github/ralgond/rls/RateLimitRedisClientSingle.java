@@ -13,17 +13,18 @@ public class RateLimitRedisClientSingle implements RateLimitRedisClient {
 
     private final JedisPool jedisPool;
 
-    public RateLimitRedisClientSingle() {
+    public RateLimitRedisClientSingle(String host, int port, int maxPool) {
         var poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(100);
-        jedisPool = new JedisPool(poolConfig, "localhost", 6379);
+        poolConfig.setMaxTotal(maxPool);
+        jedisPool = new JedisPool(poolConfig, host, port);
     }
 
     @Override
     public boolean shouldLimit(String key, Rule rule) throws Exception {
         Jedis jedis = null;
         try {
-            jedis = jedisPool.getResource();
+            // jedis = jedisPool.getResource();
+            jedis = jedisPool.borrowObject();
             Object ret = jedis.sendCommand(CustomRedisCommand.CLTHROTTLE,
                     key,
                     String.valueOf(rule.getBurst()),
@@ -38,7 +39,8 @@ public class RateLimitRedisClientSingle implements RateLimitRedisClient {
             }
         } finally {
             if (jedis != null) {
-                jedisPool.returnResource(jedis);
+                //jedisPool.returnResource(jedis);
+                jedisPool.returnObject(jedis);
             }
         }
     }

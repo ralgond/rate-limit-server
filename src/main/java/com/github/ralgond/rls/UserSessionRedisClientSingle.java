@@ -7,22 +7,24 @@ import redis.clients.jedis.JedisPoolConfig;
 public class UserSessionRedisClientSingle implements UserSessionRedisClient{
     private final JedisPool jedisPool;
 
-    public UserSessionRedisClientSingle() {
+    public UserSessionRedisClientSingle(String host, int port, int maxPool) {
         var poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(100);
-        jedisPool = new JedisPool(poolConfig, "localhost", 6379);
+        poolConfig.setMaxTotal(maxPool);
+        jedisPool = new JedisPool(poolConfig, host, port);
     }
 
     @Override
-    public boolean exists(String sessionId) {
+    public boolean exists(String sessionId) throws Exception {
         Jedis jedis = null;
         try {
-            jedis = jedisPool.getResource();
+            // jedis = jedisPool.getResource();
+            jedis = jedisPool.borrowObject();
             boolean ret = jedis.exists(sessionId);
             return ret;
         } finally {
             if (jedis != null) {
-                jedisPool.returnResource(jedis);
+                // jedisPool.returnResource(jedis);
+                jedisPool.returnObject(jedis);
             }
         }
     }
@@ -32,9 +34,4 @@ public class UserSessionRedisClientSingle implements UserSessionRedisClient{
         jedisPool.close();
     }
 
-    public static void main(String[] args) {
-        var client = new UserSessionRedisClientSingle();
-        System.out.println(client.exists("a"));
-        System.out.println(client.exists("b"));
-    }
 }
