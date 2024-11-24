@@ -13,7 +13,7 @@ public class Main {
         dbService.start();
 
         NettyServer server = context.getBean(NettyServer.class);
-        server.start(8002);
+        server.start();
 
         context.close();
     }

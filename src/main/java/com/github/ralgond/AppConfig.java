@@ -16,9 +16,12 @@ import java.io.InputStream;
 @PropertySource("classpath:external-config.properties")
 public class AppConfig {
 
+    @Value("${NettyServer.port}")
+    int NettyServerPort;
+
     @Bean
     public NettyServer nettyServer() {
-        return new NettyServer();
+        return new NettyServer(NettyServerPort);
     }
 
     @Bean(destroyMethod = "close")
