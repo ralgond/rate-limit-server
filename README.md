@@ -6,6 +6,9 @@ Java 21
 ## Architecture Image
 ![](images/Rate-Limit-System-Design-5.drawio.png)
 
+## Performance
+72000 QPS per node.
+
 ## nginx rate limit request module
 [Here](https://github.com/ralgond/ngx_http_rate_limit_request_module)
 
