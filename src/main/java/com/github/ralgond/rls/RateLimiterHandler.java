@@ -55,6 +55,9 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+//        handleRequestAlwaysOK(ctx, request);
+//        return;
+
         try {
 //            executor.submit(() ->
 //            {
@@ -73,7 +76,7 @@ public class RateLimiterHandler extends SimpleChannelInboundHandler<FullHttpRequ
     }
 
     private void handleRequestAlwaysOK(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        sendResponse(ctx, request, HttpResponseStatus.OK, "OK");
+        sendResponse(ctx, request, HttpResponseStatus.OK, "1");
     }
 
     private void handleRequest(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
