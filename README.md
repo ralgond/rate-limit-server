@@ -1,4 +1,4 @@
-# rate-limit-server
+# anti-spider
 
 ## Java Version
 Java 21
